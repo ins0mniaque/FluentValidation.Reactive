@@ -2,6 +2,10 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
+
+    <PackageId>FluentValidationExtensions.Reactive</PackageId>
+    <Description>Reactive extensions for FluentValidation</Description>
+    <PackageTags>FluentValidation;fluent;validation;System.Reactive;reactive</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

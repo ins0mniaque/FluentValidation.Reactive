@@ -3,6 +3,10 @@
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
     <UseWPF>true</UseWPF>
+
+    <PackageId>FluentValidationExtensions.Reactive.WPF</PackageId>
+    <Description>WPF reactive extensions for FluentValidation</Description>
+    <PackageTags>FluentValidation;fluent;validation;System.Reactive;reactive,WPF</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

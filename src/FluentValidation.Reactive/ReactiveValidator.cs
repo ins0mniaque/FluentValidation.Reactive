@@ -19,6 +19,7 @@ namespace FluentValidation.Reactive
             Validator        = validator;
             ValidationResult = signal.Select   ( _ => ObservableValidate ( ) )
                                      .Switch   ( )
+                                     .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance )
                                      .Replay   ( 1 )
                                      .RefCount ( );
         }

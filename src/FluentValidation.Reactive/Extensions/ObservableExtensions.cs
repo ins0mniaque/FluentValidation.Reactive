@@ -6,6 +6,7 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using FluentValidation.Internal;
 using FluentValidation.Results;
 
 namespace FluentValidation.Reactive
@@ -19,14 +20,13 @@ namespace FluentValidation.Reactive
 
         public static IObservable < ValidationResult > ForProperty < T, TProperty > ( this IObservable < ValidationResult > validationResult, Expression < Func < T, TProperty > > property )
         {
-            return validationResult.ForProperty ( Internal.PropertyChain.FromExpression ( property ).ToString ( ) );
+            return validationResult.ForProperty ( PropertyChain.FromExpression ( property ).ToString ( ) );
         }
 
         public static IObservable < ValidationResult > ForProperty ( this IObservable < ValidationResult > validationResult, string propertyPath )
         {
-            // TODO: Compare validation results to implement DistinctUntilChanged behavior
-            return validationResult.Select ( validation => new ValidationResult ( validation.Errors.Where ( error => error.PropertyName == propertyPath ) ) );
-                                // .DistinctUntilChanged ( );
+            return validationResult.Select ( validation => new ValidationResult ( validation.Errors.Where ( error => error.PropertyName == propertyPath ) ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
         }
 
         public static IDisposable Subscribe ( this IObservable < ValidationResult > validationResult, Action < IEnumerable < ValidationFailure > > action )

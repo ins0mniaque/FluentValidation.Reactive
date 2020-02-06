@@ -10,6 +10,16 @@ namespace FluentValidation.Reactive
 {
     public static class ReactiveValidatableExtensions
     {
+        public static void Validate < T > ( this T reactiveValidatable ) where T : class, IReactiveValidatable < T >
+        {
+            if ( reactiveValidatable == null )
+                throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
+
+            reactiveValidatable.ReactiveValidator.Instance = reactiveValidatable;
+
+            reactiveValidatable.ReactiveValidator.Validate ( );
+        }
+
         public static IObservable < ValidationResult > ValidationResult < T > ( this IObservable < T > reactiveValidatable ) where T : class, IReactiveValidatable < T >
         {
             return reactiveValidatable.Where  ( validatable => validatable != null )

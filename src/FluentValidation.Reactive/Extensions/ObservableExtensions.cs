@@ -18,15 +18,30 @@ namespace FluentValidation.Reactive
             return validationResult.Select ( validation => validation.IsValid ).DistinctUntilChanged ( );
         }
 
-        public static IObservable < ValidationResult > ForProperty < T, TProperty > ( this IObservable < ValidationResult > validationResult, Expression < Func < T, TProperty > > property )
+        public static IObservable < ValidationResult > ForProperty < T, TProperty > ( this IObservable < ValidationResult > validationResult, Expression < Func < T, TProperty > > property, bool includeChildProperties = true )
         {
-            return validationResult.ForProperty ( PropertyChain.FromExpression ( property ).ToString ( ) );
+            return validationResult.ForProperty ( PropertyChain.FromExpression ( property ).ToString ( ), includeChildProperties );
         }
 
-        public static IObservable < ValidationResult > ForProperty ( this IObservable < ValidationResult > validationResult, string propertyPath )
+        public static IObservable < ValidationResult > ForProperty ( this IObservable < ValidationResult > validationResult, string propertyPath, bool includeChildProperties = true )
         {
-            return validationResult.Select ( validation => new ValidationResult ( validation.Errors.Where ( error => error.PropertyName == propertyPath ) ) )
+            propertyPath ??= string.Empty;
+
+            return validationResult.Select ( validation => new ValidationResult ( validation.Errors.Where ( Matches ) ) )
                                    .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
+
+            bool Matches ( ValidationFailure error )
+            {
+                var propertyName = error.PropertyName ?? string.Empty;
+                if ( propertyName == propertyPath )
+                    return true;
+
+                if ( ! includeChildProperties )
+                    return false;
+
+                return propertyName.StartsWith ( propertyPath, StringComparison.Ordinal ) &&
+                       ! char.IsLetter ( propertyName [ propertyPath.Length ] );
+            }
         }
 
         public static IDisposable Subscribe ( this IObservable < ValidationResult > validationResult, Action < IEnumerable < ValidationFailure > > action )

@@ -28,12 +28,12 @@ namespace FluentValidation.Reactive
             return reactiveValidatable.ReactiveValidator.ValidationResult;
         }
 
-        public static IObservable < ValidationResult > ValidationResult < T, TProperty > ( this T reactiveValidatable, Expression < Func < T, TProperty > > expression ) where T : class, IReactiveValidatable < T >
+        public static IObservable < ValidationResult > ValidationResult < T, TProperty > ( this T reactiveValidatable, Expression < Func < T, TProperty > > expression, bool includeChildProperties = true ) where T : class, IReactiveValidatable < T >
         {
             if ( reactiveValidatable == null )
                 throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
 
-            return reactiveValidatable.ReactiveValidator.ValidationResult.ForProperty ( expression );
+            return reactiveValidatable.ReactiveValidator.ValidationResult.ForProperty ( expression, includeChildProperties );
         }
 
         public static IObservable < ValidationResult > ValidationResult < T > ( this IObservable < T > reactiveValidatable ) where T : class, IReactiveValidatable < T >
@@ -43,10 +43,10 @@ namespace FluentValidation.Reactive
                                       .Switch ( );
         }
 
-        public static IObservable < ValidationResult > ValidationResult < T, TProperty > ( this IObservable < T > reactiveValidatable, Expression < Func < T, TProperty > > expression ) where T : class, IReactiveValidatable < T >
+        public static IObservable < ValidationResult > ValidationResult < T, TProperty > ( this IObservable < T > reactiveValidatable, Expression < Func < T, TProperty > > expression, bool includeChildProperties = true ) where T : class, IReactiveValidatable < T >
         {
             return reactiveValidatable.Where  ( validatable => validatable != null )
-                                      .Select ( validatable => validatable.ReactiveValidator.ValidationResult.ForProperty ( expression ) )
+                                      .Select ( validatable => validatable.ReactiveValidator.ValidationResult.ForProperty ( expression, includeChildProperties ) )
                                       .Switch ( );
         }
 
@@ -58,12 +58,12 @@ namespace FluentValidation.Reactive
             return reactiveValidatable.ReactiveValidator.ValidationResult.IsValid ( );
         }
 
-        public static IObservable < bool > IsValid < T, TProperty > ( this T reactiveValidatable, Expression < Func < T, TProperty > > expression ) where T : class, IReactiveValidatable < T >
+        public static IObservable < bool > IsValid < T, TProperty > ( this T reactiveValidatable, Expression < Func < T, TProperty > > expression, bool includeChildProperties = true ) where T : class, IReactiveValidatable < T >
         {
             if ( reactiveValidatable == null )
                 throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
 
-            return reactiveValidatable.ReactiveValidator.ValidationResult.ForProperty ( expression ).IsValid ( );
+            return reactiveValidatable.ReactiveValidator.ValidationResult.ForProperty ( expression, includeChildProperties ).IsValid ( );
         }
 
         public static IDisposable ValidateWhen < T, TSignal > ( this T reactiveValidatable, IObservable < TSignal > signal ) where T : class, IReactiveValidatable < T >

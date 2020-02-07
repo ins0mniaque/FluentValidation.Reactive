@@ -20,6 +20,22 @@ namespace FluentValidation.Reactive
             reactiveValidatable.ReactiveValidator.Validate ( );
         }
 
+        public static IObservable < ValidationResult > ValidationResult < T > ( this T reactiveValidatable ) where T : class, IReactiveValidatable < T >
+        {
+            if ( reactiveValidatable == null )
+                throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
+
+            return reactiveValidatable.ReactiveValidator.ValidationResult;
+        }
+
+        public static IObservable < ValidationResult > ValidationResult < T, TProperty > ( this T reactiveValidatable, Expression < Func < T, TProperty > > expression ) where T : class, IReactiveValidatable < T >
+        {
+            if ( reactiveValidatable == null )
+                throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
+
+            return reactiveValidatable.ReactiveValidator.ValidationResult.ForProperty ( expression );
+        }
+
         public static IObservable < ValidationResult > ValidationResult < T > ( this IObservable < T > reactiveValidatable ) where T : class, IReactiveValidatable < T >
         {
             return reactiveValidatable.Where  ( validatable => validatable != null )

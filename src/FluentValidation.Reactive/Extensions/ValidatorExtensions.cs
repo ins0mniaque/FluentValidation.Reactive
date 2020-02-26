@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive.Linq;
+using System.Reflection;
 
 using FluentValidation.Internal;
 using FluentValidation.Validators;
@@ -22,8 +23,10 @@ namespace FluentValidation.Reactive
 
         private static string GetPropertyPath ( this LambdaExpression expression )
         {
-            var parameter    = expression.Parameters [ 0 ].ToString ( ) + ".";
-            var propertyPath = expression.Body.ToString ( ).Replace ( ".Item[0]", "[]" );
+            var propertyPath = expression.Body.ToString ( ).Replace ( ".Item[0]", "[]" )
+                                                           .Replace ( ".First()", "[]" );
+
+            var parameter = expression.Parameters [ 0 ].ToString ( ) + ".";
             if ( propertyPath.StartsWith ( parameter, StringComparison.Ordinal ) )
                 propertyPath = propertyPath.Remove ( 0, parameter.Length );
 
@@ -82,15 +85,30 @@ namespace FluentValidation.Reactive
             return false;
         }
 
+        private static readonly MethodInfo EnumerableFirstMethod = typeof ( Enumerable ).GetMethods ( ).Single ( method => method.Name == nameof ( Enumerable.First ) && method.GetParameters ( ).Length == 1 );
+
         private static LambdaExpression AddIndexer ( LambdaExpression expression )
         {
-            var indexer = expression.Body.Type.GetProperty ( "Item" );
-            if ( indexer == null )
-                throw new NotSupportedException ( $"Collection type { expression.Body.Type.Name } has no indexer" );
+            if ( expression.Body.Type.IsArray )
+                return Expression.Lambda ( Expression.ArrayIndex ( expression.Body,
+                                                                   Expression.Constant ( 0 ) ),
+                                           expression.Parameters );
 
-            return Expression.Lambda ( Expression.MakeIndex ( expression.Body,
-                                                              indexer,
-                                                              new [ ] { Expression.Constant ( 0 ) } ),
+            var indexer = expression.Body.Type.GetProperty ( "Item" );
+            if ( indexer != null )
+                return Expression.Lambda ( Expression.MakeIndex ( expression.Body,
+                                                                  indexer,
+                                                                  new [ ] { Expression.Constant ( 0 ) } ),
+                                           expression.Parameters );
+
+            var itemType = expression.Body.Type.GetInterfaces ( )
+                                               .Where  ( @interface => @interface.IsGenericType )
+                                               .Single ( @interface => @interface.GetGenericTypeDefinition ( ) == typeof ( IEnumerable < > ) )
+                                               .GetGenericArguments ( ) [ 0 ];
+
+            return Expression.Lambda ( Expression.Call ( null,
+                                                         EnumerableFirstMethod.MakeGenericMethod ( itemType ),
+                                                         expression.Body ),
                                        expression.Parameters );
         }
 

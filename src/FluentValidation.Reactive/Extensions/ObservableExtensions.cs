@@ -18,30 +18,36 @@ namespace FluentValidation.Reactive
             return validationResult.Select ( validation => validation.IsValid ).DistinctUntilChanged ( );
         }
 
-        public static IObservable < ValidationResult > ForProperty < T, TProperty > ( this IObservable < ValidationResult > validationResult, Expression < Func < T, TProperty > > property, bool includeChildProperties = true )
+        public static IObservable < Severity? > Severity ( this IObservable < ValidationResult > validationResult )
         {
-            return validationResult.ForProperty ( PropertyChain.FromExpression ( property ).ToString ( ), includeChildProperties );
+            return validationResult.Select ( validation => validation.GetSeverity ( ) ).DistinctUntilChanged ( );
         }
 
-        public static IObservable < ValidationResult > ForProperty ( this IObservable < ValidationResult > validationResult, string propertyPath, bool includeChildProperties = true )
+        public static IObservable < bool > Is ( this IObservable < Severity? > severity, params Severity [ ] severities )
         {
-            propertyPath ??= string.Empty;
+            return severity.Select ( severity => severity != null && severities.Contains ( severity.Value ) ).DistinctUntilChanged ( );
+        }
 
-            return validationResult.Select ( validation => new ValidationResult ( validation.Errors.Where ( Matches ) ) )
+        public static IObservable < bool > IsNot ( this IObservable < Severity? > severity, params Severity [ ] severities )
+        {
+            return severity.Select ( severity => severity == null || ! severities.Contains ( severity.Value ) ).DistinctUntilChanged ( );
+        }
+
+        public static IObservable < ValidationResult > For < T, TProperty > ( this IObservable < ValidationResult > validationResult, Expression < Func < T, TProperty > > property, bool includeChildProperties = true )
+        {
+            return validationResult.For ( PropertyChain.FromExpression ( property ).ToString ( ), includeChildProperties );
+        }
+
+        public static IObservable < ValidationResult > For ( this IObservable < ValidationResult > validationResult, string propertyPath, bool includeChildProperties = true )
+        {
+            return validationResult.Select ( validation => validation.For ( propertyPath, includeChildProperties ) )
                                    .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
+        }
 
-            bool Matches ( ValidationFailure error )
-            {
-                var propertyName = error.PropertyName ?? string.Empty;
-                if ( propertyName == propertyPath )
-                    return true;
-
-                if ( ! includeChildProperties )
-                    return false;
-
-                return propertyName.StartsWith ( propertyPath, StringComparison.Ordinal ) &&
-                       ! char.IsLetter ( propertyName [ propertyPath.Length ] );
-            }
+        public static IObservable < ValidationResult > OfSeverity ( this IObservable < ValidationResult > validationResult, params Severity [ ] severities )
+        {
+            return validationResult.Select ( validation => validation.OfSeverity ( severities ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
         }
 
         public static IDisposable Subscribe ( this IObservable < ValidationResult > validationResult, Action < IEnumerable < ValidationFailure > > action )

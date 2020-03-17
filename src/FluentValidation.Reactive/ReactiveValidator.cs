@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -7,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using FluentValidation.Results;
-using FluentValidation.Validators;
 
 namespace FluentValidation.Reactive
 {
@@ -26,7 +24,10 @@ namespace FluentValidation.Reactive
             ValidationResult = signal.Select   ( ValidateAsync )
                                      .Switch   ( )
                                      .Scan     ( (Previous: empty, Current: empty), (window, latest) => (window.Current, latest) )
-                                     .Select   ( window => MergeResults ( window.Previous, window.Current ) )
+                                     .Select   ( window => Merge ( window.Previous.Context,
+                                                                   window.Previous.Result,
+                                                                   window.Current .Context,
+                                                                   window.Current .Result ) )
                                      .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance )
                                      .Replay   ( 1 )
                                      .RefCount ( );
@@ -35,14 +36,19 @@ namespace FluentValidation.Reactive
         public IValidator  < T >                Validator        { get; }
         public IObservable < ValidationResult > ValidationResult { get; }
 
-        public void Validate ( ValidationContext < T > context, CancellationToken cancellationToken = default )
+        public virtual void Validate ( ValidationContext < T > context, CancellationToken cancellationToken = default )
         {
             signal.OnNext ( new ValidationRequest ( context, cancellationToken ) );
         }
 
-        public void Reset ( CancellationToken cancellationToken = default )
+        public virtual void Reset ( CancellationToken cancellationToken = default )
         {
             signal.OnNext ( new ValidationRequest ( null, cancellationToken ) );
+        }
+
+        protected virtual ValidationResult Merge ( ValidationContext? previousContext, ValidationResult previousResult, ValidationContext? currentContext, ValidationResult currentResult )
+        {
+            return Internal.ValidationResultDiffTool.Merge ( previousContext, previousResult, currentContext, currentResult );
         }
 
         private IObservable < ContextualValidationResult > ValidateAsync ( ValidationRequest request )
@@ -58,22 +64,6 @@ namespace FluentValidation.Reactive
                 using ( var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource ( request.CancellationToken, cancellationToken ) )
                     return Validator.ValidateAsync ( request.Context, linkedCancellation.Token );
             }
-        }
-
-        private ValidationResult MergeResults ( ContextualValidationResult previous, ContextualValidationResult current )
-        {
-            if ( current.Context != null && ReferenceEquals ( previous.Context?.InstanceToValidate, current.Context.InstanceToValidate ) )
-            {
-                var fakeRule = new FakeRule { RuleSets = previous.Result.RuleSetsExecuted };
-                var selector = current.Context.Selector;
-
-                bool NotInvalidated ( ValidationFailure error ) => ! selector.CanExecute ( fakeRule, error.PropertyName, previous.Context );
-
-                foreach ( var error in previous.Result.Errors.Where ( NotInvalidated ) )
-                    current.Result.Errors.Add ( error );
-            }
-
-            return current.Result;
         }
 
         private class ValidationRequest
@@ -99,19 +89,6 @@ namespace FluentValidation.Reactive
 
             public ValidationContext < T >? Context { get; }
             public ValidationResult         Result  { get; }
-        }
-
-        private class FakeRule : IValidationRule
-        {
-            public string [ ]? RuleSets { get; set; }
-
-            public IEnumerable < IPropertyValidator > Validators => throw new NotImplementedException ( );
-
-            public void ApplyCondition      ( Func < PropertyValidatorContext, bool >                             predicate, ApplyConditionTo applyConditionTo = ApplyConditionTo.AllValidators ) => throw new NotImplementedException ( );
-            public void ApplyAsyncCondition ( Func < PropertyValidatorContext, CancellationToken, Task < bool > > predicate, ApplyConditionTo applyConditionTo = ApplyConditionTo.AllValidators ) => throw new NotImplementedException ( );
-
-            public IEnumerable < ValidationFailure >          Validate      ( ValidationContext context )                                 => throw new NotImplementedException ( );
-            public Task < IEnumerable < ValidationFailure > > ValidateAsync ( ValidationContext context, CancellationToken cancellation ) => throw new NotImplementedException ( );
         }
     }
 }

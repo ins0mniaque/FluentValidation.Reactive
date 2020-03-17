@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 using FluentValidation.Results;
 
@@ -9,8 +10,7 @@ namespace FluentValidation.Reactive
         IValidator  < T >                Validator        { get; }
         IObservable < ValidationResult > ValidationResult { get; }
 
-        T? Instance { get; set; }
-
-        void Validate ( );
+        void Validate ( ValidationContext < T > context, CancellationToken cancellationToken = default );
+        void Reset    (                                  CancellationToken cancellationToken = default );
     }
 }

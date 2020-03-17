@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive.Linq;
+using System.Threading;
 
 using FluentValidation;
+using FluentValidation.Internal;
 using FluentValidation.Results;
 
 namespace FluentValidation.Reactive
@@ -15,9 +18,7 @@ namespace FluentValidation.Reactive
             if ( reactiveValidatable == null )
                 throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
 
-            reactiveValidatable.ReactiveValidator.Instance = reactiveValidatable;
-
-            reactiveValidatable.ReactiveValidator.Validate ( );
+            reactiveValidatable.ReactiveValidator.Validate ( reactiveValidatable );
         }
 
         public static IObservable < ValidationResult > ValidationResult < T > ( this T reactiveValidatable ) where T : class, IReactiveValidatable < T >
@@ -84,9 +85,47 @@ namespace FluentValidation.Reactive
             if ( reactiveValidatable == null )
                 throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
 
-            reactiveValidatable.ReactiveValidator.Instance = reactiveValidatable;
+            return signal.Subscribe ( _ => reactiveValidatable.ReactiveValidator.Validate ( reactiveValidatable ) );
+        }
 
-            return signal.Subscribe ( _ => reactiveValidatable.ReactiveValidator.Validate ( ) );
+        public static IDisposable ValidateWhen < T, TSignal > ( this T reactiveValidatable, IObservable < TSignal > signal, params string [ ] properties ) where T : class, IReactiveValidatable < T >
+        {
+            if ( reactiveValidatable == null )
+                throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
+
+            return signal.Subscribe ( _ => reactiveValidatable.ReactiveValidator.Validate ( reactiveValidatable, CancellationToken.None, properties ) );
+        }
+
+        public static IDisposable ValidateWhen < T, TSignal > ( this T reactiveValidatable, IObservable < TSignal > signal, params Expression < Func < T, object > > [ ] properties ) where T : class, IReactiveValidatable < T >
+        {
+            if ( reactiveValidatable == null )
+                throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
+
+            return signal.Subscribe ( _ => reactiveValidatable.ReactiveValidator.Validate ( reactiveValidatable, CancellationToken.None, properties ) );
+        }
+
+        public static IDisposable ValidateWhen < T, TSignal > ( this T reactiveValidatable, IObservable < TSignal > signal, IValidatorSelector? selector = null, string? ruleSet = null ) where T : class, IReactiveValidatable < T >
+        {
+            if ( reactiveValidatable == null )
+                throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
+
+            return signal.Subscribe ( _ => reactiveValidatable.ReactiveValidator.Validate ( reactiveValidatable, CancellationToken.None, selector, ruleSet ) );
+        }
+
+        public static IDisposable ValidateOnPropertyChanged < T > ( this T reactiveValidatable, IObservable < string > propertyChanged ) where T : class, IReactiveValidatable < T >
+        {
+            if ( reactiveValidatable == null )
+                throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
+
+            return propertyChanged.Subscribe ( property => reactiveValidatable.ReactiveValidator.Validate ( reactiveValidatable, CancellationToken.None, property ) );
+        }
+
+        public static IDisposable ValidateOnPropertyChanged < T > ( this T reactiveValidatable, IObservable < IEnumerable < string > > propertiesChanged ) where T : class, IReactiveValidatable < T >
+        {
+            if ( reactiveValidatable == null )
+                throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
+
+            return propertiesChanged.Subscribe ( properties => reactiveValidatable.ReactiveValidator.Validate ( reactiveValidatable, CancellationToken.None, properties.ToArray ( ) ) );
         }
     }
 }

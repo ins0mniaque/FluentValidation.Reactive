@@ -9,28 +9,31 @@ using FluentValidation.Results;
 
 namespace FluentValidation.Reactive
 {
-    public class ReactiveValidator < T > : IReactiveValidator < T > where T : class
+    public class ReactiveValidator < T > : IReactiveValidator < T >, IDisposable where T : class
     {
-        private ISubject < ValidationRequest > signal = new Subject < ValidationRequest > ( );
+        private readonly Subject < ValidationRequest > signal = new Subject < ValidationRequest > ( );
+        private IDisposable?                           connection;
 
         public ReactiveValidator ( IValidator < T > validator )
         {
             if ( validator == null )
                 throw new ArgumentNullException ( nameof ( validator ) );
 
-            var empty = new ContextualValidationResult ( );
+            var empty      = new ContextualValidationResult ( );
+            var validation = signal.Select ( ValidateAsync )
+                                   .Switch ( )
+                                   .Scan   ( (Previous: empty, Current: empty), (window, latest) => (window.Current, latest) )
+                                   .Select ( window => Merge ( window.Previous.Context,
+                                                               window.Previous.Result,
+                                                               window.Current .Context,
+                                                               window.Current .Result ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance )
+                                   .Replay ( 1 );
 
             Validator        = validator;
-            ValidationResult = signal.Select   ( ValidateAsync )
-                                     .Switch   ( )
-                                     .Scan     ( (Previous: empty, Current: empty), (window, latest) => (window.Current, latest) )
-                                     .Select   ( window => Merge ( window.Previous.Context,
-                                                                   window.Previous.Result,
-                                                                   window.Current .Context,
-                                                                   window.Current .Result ) )
-                                     .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance )
-                                     .Replay   ( 1 )
-                                     .RefCount ( );
+            ValidationResult = validation;
+
+            connection = validation.Connect ( );
         }
 
         public IValidator  < T >                Validator        { get; }
@@ -63,6 +66,24 @@ namespace FluentValidation.Reactive
             {
                 using ( var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource ( request.CancellationToken, cancellationToken ) )
                     return Validator.ValidateAsync ( request.Context, linkedCancellation.Token );
+            }
+        }
+
+        public void Dispose ( )
+        {
+            Dispose ( true );
+
+            GC.SuppressFinalize ( this );
+        }
+
+        protected virtual void Dispose ( bool disposing )
+        {
+            if ( connection != null )
+            {
+                connection?.Dispose ( );
+                connection = null;
+
+                signal.Dispose ( );
             }
         }
 

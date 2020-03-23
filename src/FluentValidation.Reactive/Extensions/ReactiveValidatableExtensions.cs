@@ -43,9 +43,44 @@ namespace FluentValidation.Reactive
                                       .Switch ( );
         }
 
-        public static IObservable < ValidationResult > ValidationResultFor < T, TProperty > ( this IObservable < T > reactiveValidatable, Expression < Func < T, TProperty > > property, bool includeChildProperties = true ) where T : class, IReactiveValidatable < T >
+        public static IObservable < ValidationResult > ValidationResultFor < T > ( this T reactiveValidatable, Expression < Func < T, object > > property ) where T : class, IReactiveValidatable < T >
         {
-            return reactiveValidatable.ValidationResult ( validation => validation.For ( property, includeChildProperties ) );
+            return reactiveValidatable.ValidationResult ( ).For ( property );
+        }
+
+        public static IObservable < ValidationResult > ValidationResultFor < T > ( this T reactiveValidatable, params Expression < Func < T, object > > [ ] properties ) where T : class, IReactiveValidatable < T >
+        {
+            return reactiveValidatable.ValidationResult ( ).For ( properties );
+        }
+
+        public static IObservable < ValidationResult > ValidationResultStrictlyFor < T > ( this T reactiveValidatable, Expression < Func < T, object > > property ) where T : class, IReactiveValidatable < T >
+        {
+            return reactiveValidatable.ValidationResult ( ).StrictlyFor ( property );
+        }
+
+        public static IObservable < ValidationResult > ValidationResultStrictlyFor < T > ( this T reactiveValidatable, params Expression < Func < T, object > > [ ] properties ) where T : class, IReactiveValidatable < T >
+        {
+            return reactiveValidatable.ValidationResult ( ).StrictlyFor ( properties );
+        }
+
+        public static IObservable < ValidationResult > ValidationResultFor < T > ( this IObservable < T > reactiveValidatable, Expression < Func < T, object > > property ) where T : class, IReactiveValidatable < T >
+        {
+            return reactiveValidatable.ValidationResult ( validation => validation.For ( property ) );
+        }
+
+        public static IObservable < ValidationResult > ValidationResultFor < T > ( this IObservable < T > reactiveValidatable, params Expression < Func < T, object > > [ ] properties ) where T : class, IReactiveValidatable < T >
+        {
+            return reactiveValidatable.ValidationResult ( validation => validation.For ( properties ) );
+        }
+
+        public static IObservable < ValidationResult > ValidationResultStrictlyFor < T > ( this IObservable < T > reactiveValidatable, Expression < Func < T, object > > property ) where T : class, IReactiveValidatable < T >
+        {
+            return reactiveValidatable.ValidationResult ( validation => validation.StrictlyFor ( property ) );
+        }
+
+        public static IObservable < ValidationResult > ValidationResultStrictlyFor < T > ( this IObservable < T > reactiveValidatable, params Expression < Func < T, object > > [ ] properties ) where T : class, IReactiveValidatable < T >
+        {
+            return reactiveValidatable.ValidationResult ( validation => validation.StrictlyFor ( properties ) );
         }
 
         public static IObservable < bool > IsValid < T > ( this T reactiveValidatable ) where T : class, IReactiveValidatable < T >
@@ -56,12 +91,36 @@ namespace FluentValidation.Reactive
             return reactiveValidatable.ReactiveValidator.ValidationResult.IsValid ( );
         }
 
-        public static IObservable < bool > IsValidFor < T, TProperty > ( this T reactiveValidatable, Expression < Func < T, TProperty > > property, bool includeChildProperties = true ) where T : class, IReactiveValidatable < T >
+        public static IObservable < bool > IsValidFor < T > ( this T reactiveValidatable, Expression < Func < T, object > > property ) where T : class, IReactiveValidatable < T >
         {
             if ( reactiveValidatable == null )
                 throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
 
-            return reactiveValidatable.ReactiveValidator.ValidationResult.For ( property, includeChildProperties ).IsValid ( );
+            return reactiveValidatable.ReactiveValidator.ValidationResult.For ( property ).IsValid ( );
+        }
+
+        public static IObservable < bool > IsValidFor < T > ( this T reactiveValidatable, params Expression < Func < T, object > > [ ] properties ) where T : class, IReactiveValidatable < T >
+        {
+            if ( reactiveValidatable == null )
+                throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
+
+            return reactiveValidatable.ReactiveValidator.ValidationResult.For ( properties ).IsValid ( );
+        }
+
+        public static IObservable < bool > IsValidStrictlyFor < T > ( this T reactiveValidatable, Expression < Func < T, object > > property ) where T : class, IReactiveValidatable < T >
+        {
+            if ( reactiveValidatable == null )
+                throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
+
+            return reactiveValidatable.ReactiveValidator.ValidationResult.StrictlyFor ( property ).IsValid ( );
+        }
+
+        public static IObservable < bool > IsValidStrictlyFor < T > ( this T reactiveValidatable, params Expression < Func < T, object > > [ ] properties ) where T : class, IReactiveValidatable < T >
+        {
+            if ( reactiveValidatable == null )
+                throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
+
+            return reactiveValidatable.ReactiveValidator.ValidationResult.StrictlyFor ( properties ).IsValid ( );
         }
 
         public static IObservable < Severity? > Severity < T > ( this T reactiveValidatable ) where T : class, IReactiveValidatable < T >
@@ -72,12 +131,36 @@ namespace FluentValidation.Reactive
             return reactiveValidatable.ReactiveValidator.ValidationResult.Severity ( );
         }
 
-        public static IObservable < Severity? > SeverityFor < T, TProperty > ( this T reactiveValidatable, Expression < Func < T, TProperty > > property, bool includeChildProperties = true ) where T : class, IReactiveValidatable < T >
+        public static IObservable < Severity? > SeverityFor < T > ( this T reactiveValidatable, Expression < Func < T, object > > property ) where T : class, IReactiveValidatable < T >
         {
             if ( reactiveValidatable == null )
                 throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
 
-            return reactiveValidatable.ReactiveValidator.ValidationResult.For ( property, includeChildProperties ).Severity ( );
+            return reactiveValidatable.ReactiveValidator.ValidationResult.For ( property ).Severity ( );
+        }
+
+        public static IObservable < Severity? > SeverityFor < T > ( this T reactiveValidatable, params Expression < Func < T, object > > [ ] properties ) where T : class, IReactiveValidatable < T >
+        {
+            if ( reactiveValidatable == null )
+                throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
+
+            return reactiveValidatable.ReactiveValidator.ValidationResult.For ( properties ).Severity ( );
+        }
+
+        public static IObservable < Severity? > SeverityStrictlyFor < T > ( this T reactiveValidatable, Expression < Func < T, object > > property ) where T : class, IReactiveValidatable < T >
+        {
+            if ( reactiveValidatable == null )
+                throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
+
+            return reactiveValidatable.ReactiveValidator.ValidationResult.StrictlyFor ( property ).Severity ( );
+        }
+
+        public static IObservable < Severity? > SeverityStrictlyFor < T > ( this T reactiveValidatable, params Expression < Func < T, object > > [ ] properties ) where T : class, IReactiveValidatable < T >
+        {
+            if ( reactiveValidatable == null )
+                throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
+
+            return reactiveValidatable.ReactiveValidator.ValidationResult.StrictlyFor ( properties ).Severity ( );
         }
 
         public static IDisposable ValidateWhen < T, TSignal > ( this T reactiveValidatable, IObservable < TSignal > signal ) where T : class, IReactiveValidatable < T >

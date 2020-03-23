@@ -6,7 +6,6 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
-using FluentValidation.Internal;
 using FluentValidation.Results;
 
 namespace FluentValidation.Reactive
@@ -33,14 +32,51 @@ namespace FluentValidation.Reactive
             return severity.Select ( severity => severity == null || ! severities.Contains ( severity.Value ) ).DistinctUntilChanged ( );
         }
 
-        public static IObservable < ValidationResult > For < T, TProperty > ( this IObservable < ValidationResult > validationResult, Expression < Func < T, TProperty > > property, bool includeChildProperties = true )
+        public static IObservable < ValidationResult > For < T > ( this IObservable < ValidationResult > validationResult, Expression < Func < T, object > > property )
         {
-            return validationResult.For ( PropertyChain.FromExpression ( property ).ToString ( ), includeChildProperties );
+            return validationResult.Select ( validation => validation.For ( property ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
         }
 
-        public static IObservable < ValidationResult > For ( this IObservable < ValidationResult > validationResult, string propertyPath, bool includeChildProperties = true )
+        public static IObservable < ValidationResult > For < T > ( this IObservable < ValidationResult > validationResult, params Expression < Func < T, object > > [ ] properties )
         {
-            return validationResult.Select ( validation => validation.For ( propertyPath, includeChildProperties ) )
+            return validationResult.Select ( validation => validation.For ( properties ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
+        }
+
+        public static IObservable < ValidationResult > StrictlyFor < T > ( this IObservable < ValidationResult > validationResult, Expression < Func < T, object > > property )
+        {
+            return validationResult.Select ( validation => validation.StrictlyFor ( property ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
+        }
+
+        public static IObservable < ValidationResult > StrictlyFor < T > ( this IObservable < ValidationResult > validationResult, params Expression < Func < T, object > > [ ] properties )
+        {
+            return validationResult.Select ( validation => validation.StrictlyFor ( properties ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
+        }
+
+        public static IObservable < ValidationResult > For ( this IObservable < ValidationResult > validationResult, string propertyPath )
+        {
+            return validationResult.Select ( validation => validation.For ( propertyPath ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
+        }
+
+        public static IObservable < ValidationResult > For ( this IObservable < ValidationResult > validationResult, params string [ ] propertyPaths )
+        {
+            return validationResult.Select ( validation => validation.For ( propertyPaths ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
+        }
+
+        public static IObservable < ValidationResult > StrictlyFor ( this IObservable < ValidationResult > validationResult, string propertyPath )
+        {
+            return validationResult.Select ( validation => validation.StrictlyFor ( propertyPath ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
+        }
+
+        public static IObservable < ValidationResult > StrictlyFor ( this IObservable < ValidationResult > validationResult, params string [ ] propertyPaths )
+        {
+            return validationResult.Select ( validation => validation.StrictlyFor ( propertyPaths ) )
                                    .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
         }
 

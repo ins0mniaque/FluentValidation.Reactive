@@ -21,7 +21,7 @@ namespace FluentValidation.Reactive
 
             var empty      = new ContextualValidationResult ( );
             var validation = signal.Select ( ValidateAsync )
-                                   .Switch ( )
+                                   .Concat ( )
                                    .Scan   ( (Previous: empty, Current: empty), (window, latest) => (window.Current, latest) )
                                    .Select ( window => Merge ( window.Previous.Context,
                                                                window.Previous.Result,
@@ -62,10 +62,11 @@ namespace FluentValidation.Reactive
             return Observable.FromAsync ( ValidateAsync )
                              .Select    ( validationResult => new ContextualValidationResult ( request.Context, validationResult ) );
 
-            Task < ValidationResult > ValidateAsync ( CancellationToken cancellationToken )
+            async Task < ValidationResult > ValidateAsync ( CancellationToken cancellationToken )
             {
                 using ( var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource ( request.CancellationToken, cancellationToken ) )
-                    return Validator.ValidateAsync ( request.Context, linkedCancellation.Token );
+                    return await Validator.ValidateAsync  ( request.Context, linkedCancellation.Token )
+                                          .ConfigureAwait ( false );
             }
         }
 

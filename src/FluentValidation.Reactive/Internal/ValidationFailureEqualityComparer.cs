@@ -18,7 +18,8 @@ namespace FluentValidation.Reactive.Internal
                    left.PropertyName == right.PropertyName &&
                    left.ErrorCode    == right.ErrorCode    &&
                    left.ErrorMessage == right.ErrorMessage &&
-                   Equals ( left.AttemptedValue, right.AttemptedValue );
+                   Equals ( left.AttemptedValue, right.AttemptedValue ) &&
+                   Equals ( left.CustomState,    right.CustomState    );
         }
 
         public int GetHashCode ( ValidationFailure? error )
@@ -30,7 +31,8 @@ namespace FluentValidation.Reactive.Internal
                    Hasher.Combine ( error.PropertyName  ?.GetHashCode ( ) ?? 0,
                    Hasher.Combine ( error.ErrorCode     ?.GetHashCode ( ) ?? 0,
                    Hasher.Combine ( error.ErrorMessage  ?.GetHashCode ( ) ?? 0,
-                                    error.AttemptedValue?.GetHashCode ( ) ?? 0 ) ) ) );
+                   Hasher.Combine ( error.AttemptedValue?.GetHashCode ( ) ?? 0,
+                                    error.CustomState   ?.GetHashCode ( ) ?? 0 ) ) ) ) );
         }
     }
 }

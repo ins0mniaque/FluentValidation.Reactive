@@ -10,6 +10,59 @@ namespace FluentValidation.Reactive
 {
     public static class ValidationResultExtensions
     {
+        public static IObservable < bool > IsValid ( this IObservable < ValidationResult > validationResult )
+        {
+            return validationResult.Select ( validation => validation.IsValid ).DistinctUntilChanged ( );
+        }
+
+        public static IObservable < ValidationResult > For < T > ( this IObservable < ValidationResult > validationResult, Expression < Func < T, object > > property )
+        {
+            return validationResult.Select ( validation => validation.For ( property ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
+        }
+
+        public static IObservable < ValidationResult > For < T > ( this IObservable < ValidationResult > validationResult, params Expression < Func < T, object > > [ ] properties )
+        {
+            return validationResult.Select ( validation => validation.For ( properties ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
+        }
+
+        public static IObservable < ValidationResult > StrictlyFor < T > ( this IObservable < ValidationResult > validationResult, Expression < Func < T, object > > property )
+        {
+            return validationResult.Select ( validation => validation.StrictlyFor ( property ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
+        }
+
+        public static IObservable < ValidationResult > StrictlyFor < T > ( this IObservable < ValidationResult > validationResult, params Expression < Func < T, object > > [ ] properties )
+        {
+            return validationResult.Select ( validation => validation.StrictlyFor ( properties ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
+        }
+
+        public static IObservable < ValidationResult > For ( this IObservable < ValidationResult > validationResult, string propertyPath )
+        {
+            return validationResult.Select ( validation => validation.For ( propertyPath ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
+        }
+
+        public static IObservable < ValidationResult > For ( this IObservable < ValidationResult > validationResult, params string [ ] propertyPaths )
+        {
+            return validationResult.Select ( validation => validation.For ( propertyPaths ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
+        }
+
+        public static IObservable < ValidationResult > StrictlyFor ( this IObservable < ValidationResult > validationResult, string propertyPath )
+        {
+            return validationResult.Select ( validation => validation.StrictlyFor ( propertyPath ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
+        }
+
+        public static IObservable < ValidationResult > StrictlyFor ( this IObservable < ValidationResult > validationResult, params string [ ] propertyPaths )
+        {
+            return validationResult.Select ( validation => validation.StrictlyFor ( propertyPaths ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
+        }
+
         public static ValidationResult For < T > ( this ValidationResult validationResult, Expression < Func < T, object > > property )
         {
             return validationResult.For ( PropertyChain.FromExpression ( property ).ToString ( ), true );
@@ -76,6 +129,27 @@ namespace FluentValidation.Reactive
                 return null;
 
             return validationResult.Errors.Select ( error => error.Severity ).Min ( );
+        }
+
+        public static IObservable < Severity? > Severity ( this IObservable < ValidationResult > validationResult )
+        {
+            return validationResult.Select ( validation => validation.GetSeverity ( ) ).DistinctUntilChanged ( );
+        }
+
+        public static IObservable < bool > Is ( this IObservable < Severity? > severity, params Severity [ ] severities )
+        {
+            return severity.Select ( severity => severity != null && severities.Contains ( severity.Value ) ).DistinctUntilChanged ( );
+        }
+
+        public static IObservable < bool > IsNot ( this IObservable < Severity? > severity, params Severity [ ] severities )
+        {
+            return severity.Select ( severity => severity == null || ! severities.Contains ( severity.Value ) ).DistinctUntilChanged ( );
+        }
+
+        public static IObservable < ValidationResult > OfSeverity ( this IObservable < ValidationResult > validationResult, params Severity [ ] severities )
+        {
+            return validationResult.Select ( validation => validation.OfSeverity ( severities ) )
+                                   .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
         }
 
         public static ValidationResult OfSeverity ( this ValidationResult validationResult, params Severity [ ] severities )

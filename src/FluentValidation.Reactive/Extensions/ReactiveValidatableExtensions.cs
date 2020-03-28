@@ -203,12 +203,31 @@ namespace FluentValidation.Reactive
             return propertyChanged.Subscribe ( property => reactiveValidatable.ReactiveValidator.Validate ( reactiveValidatable, CancellationToken.None, property ) );
         }
 
+        public static IDisposable ValidateOnPropertyChanged < T > ( this T reactiveValidatable, IObservable < string > propertyChanged, TimeSpan throttle ) where T : class, IReactiveValidatable < T >
+        {
+            if ( reactiveValidatable == null )
+                throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
+
+            return reactiveValidatable.ValidateOnPropertyChanged ( propertyChanged.GroupByUntil ( _ => true, _ => Observable.Timer ( throttle ) )
+                                                                                  .SelectMany   ( buffer => buffer.Distinct ( ).ToList ( ) ) );
+        }
+
         public static IDisposable ValidateOnPropertyChanged < T > ( this T reactiveValidatable, IObservable < IEnumerable < string > > propertiesChanged ) where T : class, IReactiveValidatable < T >
         {
             if ( reactiveValidatable == null )
                 throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
 
             return propertiesChanged.Subscribe ( properties => reactiveValidatable.ReactiveValidator.Validate ( reactiveValidatable, CancellationToken.None, properties.ToArray ( ) ) );
+        }
+
+        public static IDisposable ValidateOnPropertyChanged < T > ( this T reactiveValidatable, IObservable < IEnumerable < string > > propertiesChanged, TimeSpan throttle ) where T : class, IReactiveValidatable < T >
+        {
+            if ( reactiveValidatable == null )
+                throw new ArgumentNullException ( nameof ( reactiveValidatable ) );
+
+            return reactiveValidatable.ValidateOnPropertyChanged ( propertiesChanged.SelectMany   ( _ => _ )
+                                                                                    .GroupByUntil ( _ => true, _ => Observable.Timer ( throttle ) )
+                                                                                    .SelectMany   ( buffer => buffer.Distinct ( ).ToList ( ) ) );
         }
     }
 }

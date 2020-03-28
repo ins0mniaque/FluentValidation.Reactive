@@ -11,9 +11,9 @@ namespace FluentValidation.Reactive
         public static IDisposable Bind ( this IObservable < ValidationResult > validationResult, DependencyObject targetElement )
         {
             return validationResult.ObserveOnDispatcher ( )
-                                   .Subscribe ( Internal.Validation.ToValidationError,
-                                                error => Internal.Validation.AddValidationError    ( error, targetElement, true ),
-                                                error => Internal.Validation.RemoveValidationError ( error, targetElement, true ) );
+                                   .Bind ( Internal.Validation.ToValidationError,
+                                           error => Internal.Validation.AddValidationError    ( error, targetElement, true ),
+                                           error => Internal.Validation.RemoveValidationError ( error, targetElement, true ) );
         }
     }
 }

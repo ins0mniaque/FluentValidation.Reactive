@@ -4,7 +4,7 @@
     {
         public static void EnablePropertyPathIndexerSupport ( )
         {
-            ValidatorOptions.ValidatorSelectors.MemberNameValidatorSelectorFactory = memberNames => new Internal.PropertyPathValidatorSelector ( memberNames );
+            ValidatorOptions.Global.ValidatorSelectors.MemberNameValidatorSelectorFactory = memberNames => new Internal.PropertyPathValidatorSelector ( memberNames );
         }
     }
 }

@@ -42,7 +42,7 @@ namespace FluentValidation.Reactive.Internal
         /// <param name="propertyPath">Property path (eg Customer.Address.Line1)</param>
         /// <param name="context">Contextual information</param>
         /// <returns>Whether or not the validator can execute.</returns>
-        public bool CanExecute ( IValidationRule rule, string propertyPath, ValidationContext context )
+        public bool CanExecute ( IValidationRule rule, string propertyPath, IValidationContext context )
         {
             if ( context == null )
                 throw new ArgumentNullException ( nameof ( context ) );
@@ -60,7 +60,7 @@ namespace FluentValidation.Reactive.Internal
             var cascadeEnabled = ! context.RootContextData.ContainsKey ( DisableCascadeKey );
 
             return isChildContext && cascadeEnabled && ! PropertyPaths.Any ( x => x.Contains ( '.' ) ) ||
-                   rule is IncludeRule ||
+                   rule is IIncludeRule ||
                    PropertyPaths.Any ( path => path == propertyPath ||
                                                IsSubPath ( propertyPath, path ) ||
                                                IsSubPath ( path, propertyPath ) );

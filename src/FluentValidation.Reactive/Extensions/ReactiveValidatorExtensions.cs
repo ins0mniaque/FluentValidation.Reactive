@@ -18,7 +18,7 @@ namespace FluentValidation.Reactive
         /// <param name="properties">Expressions to specify the properties to validate</param>
         public static void Validate < T > ( this IReactiveValidator < T > validator, T instance, CancellationToken cancellationToken = default, params Expression < Func < T, object > > [ ] properties ) where T : class
         {
-            var selector = ValidatorOptions.ValidatorSelectors.MemberNameValidatorSelectorFactory ( MemberNameValidatorSelector.MemberNamesFromExpressions ( properties ) );
+            var selector = ValidatorOptions.Global.ValidatorSelectors.MemberNameValidatorSelectorFactory ( MemberNameValidatorSelector.MemberNamesFromExpressions ( properties ) );
             var context  = new ValidationContext < T > ( instance, new PropertyChain ( ), selector );
 
             validator.Validate ( context, cancellationToken );
@@ -33,7 +33,7 @@ namespace FluentValidation.Reactive
         /// <param name="properties">The names of the properties to validate.</param>
         public static void Validate < T > ( this IReactiveValidator < T > validator, T instance, CancellationToken cancellationToken = default, params string [ ] properties ) where T : class
         {
-            var selector = ValidatorOptions.ValidatorSelectors.MemberNameValidatorSelectorFactory ( properties );
+            var selector = ValidatorOptions.Global.ValidatorSelectors.MemberNameValidatorSelectorFactory ( properties );
             var context  = new ValidationContext < T > ( instance, new PropertyChain ( ), selector );
 
             validator.Validate ( context, cancellationToken );
@@ -55,13 +55,13 @@ namespace FluentValidation.Reactive
             if ( selector != null && ruleSet != null )
                 throw new InvalidOperationException ( "Cannot specify both an IValidatorSelector and a RuleSet." );
 
-            selector ??= ValidatorOptions.ValidatorSelectors.DefaultValidatorSelectorFactory ( );
+            selector ??= ValidatorOptions.Global.ValidatorSelectors.DefaultValidatorSelectorFactory ( );
 
             if ( ruleSet != null )
             {
                 var ruleSetNames = ruleSet.Split ( ',', ';' );
 
-                selector = ValidatorOptions.ValidatorSelectors.RulesetValidatorSelectorFactory ( ruleSetNames );
+                selector = ValidatorOptions.Global.ValidatorSelectors.RulesetValidatorSelectorFactory ( ruleSetNames );
             }
 
             var context = new ValidationContext < T > ( instance, new PropertyChain ( ), selector );

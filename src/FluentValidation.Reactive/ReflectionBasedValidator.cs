@@ -30,11 +30,13 @@ namespace FluentValidation.Reactive
                 var rule = new PropertyRule ( property,
                                               NonGenericExpression ( property ).Compile ( ),
                                               GenericExpression    ( property ),
-                                              ( ) => ValidatorOptions.CascadeMode,
+                                              ( ) => ValidatorOptions.Global.CascadeMode,
                                               property.PropertyType,
                                               typeof ( T ) );
 
-                rule.AddValidator ( new ChildValidatorAdaptor ( validator, validator.GetType ( ) ) );
+                var adaptorType = typeof ( ChildValidatorAdaptor < , > ).MakeGenericType ( typeof ( T ), property.PropertyType );
+
+                rule.AddValidator ( (IPropertyValidator) Activator.CreateInstance ( adaptorType, validator, validator.GetType ( ) ) );
 
                 AddRule ( rule );
             }

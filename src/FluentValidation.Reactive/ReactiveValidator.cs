@@ -49,7 +49,7 @@ namespace FluentValidation.Reactive
             signal.OnNext ( new ValidationRequest ( null, cancellationToken ) );
         }
 
-        protected virtual ValidationResult Merge ( ValidationContext? previousContext, ValidationResult previousResult, ValidationContext? currentContext, ValidationResult currentResult )
+        protected virtual ValidationResult Merge ( IValidationContext? previousContext, ValidationResult previousResult, IValidationContext? currentContext, ValidationResult currentResult )
         {
             return Internal.ValidationResultDiffTool.Merge ( previousContext, previousResult, currentContext, currentResult );
         }

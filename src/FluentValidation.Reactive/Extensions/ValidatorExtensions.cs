@@ -63,8 +63,8 @@ namespace FluentValidation.Reactive
                     yield return expression;
 
                 var childValidators = rule.Validators
-                                          .OfType < ChildValidatorAdaptor > ( )
-                                          .Select ( adaptor => adaptor.GetValidator ( emptyContext ) );
+                                          .OfType < IChildValidatorAdaptor > ( )
+                                          .Select ( adaptor => GetValidator ( adaptor, emptyContext ) );
 
                 foreach ( var childValidator in childValidators )
                     foreach ( var childExpression in childValidator.GetValidatedExpressions ( expression ) )
@@ -72,11 +72,24 @@ namespace FluentValidation.Reactive
             }
         }
 
+        private static readonly Lazy < Dictionary < Type, MethodInfo > > typedChildValidatorAdaptorCache = new Lazy < Dictionary < Type, MethodInfo > > ( );
+
+        private static IValidator GetValidator ( IChildValidatorAdaptor adaptor, PropertyValidatorContext context )
+        {
+            var cache       = typedChildValidatorAdaptorCache.Value;
+            var adaptorType = adaptor.GetType ( );
+            if ( ! cache.TryGetValue ( adaptorType, out var getValidator ) )
+                cache [ adaptorType ] = getValidator = adaptorType.GetRuntimeMethod ( nameof ( ChildValidatorAdaptor < object, object >.GetValidator ),
+                                                                                      new [ ] { typeof ( PropertyValidatorContext ) } );
+
+            return (IValidator) getValidator.Invoke ( adaptor, new [ ] { context } );
+        }
+
         private static bool IsCollectionPropertyRuleType ( Type type )
         {
             while ( type != null )
             {
-                if ( type.IsGenericType && type.GetGenericTypeDefinition ( ) == typeof ( CollectionPropertyRule < > ) )
+                if ( type.IsGenericType && type.GetGenericTypeDefinition ( ) == typeof ( CollectionPropertyRule < , > ) )
                     return true;
 
                 type = type.BaseType;

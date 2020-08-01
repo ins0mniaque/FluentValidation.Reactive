@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 
 using FluentValidation.Internal;
-using FluentValidation.Reactive.Validators;
 
 namespace FluentValidation.Reactive.Internal
 {
@@ -51,23 +50,19 @@ namespace FluentValidation.Reactive.Internal
             if ( propertyPath == null )
                 throw new ArgumentNullException ( nameof ( propertyPath ) );
 
-            if ( HasIndexers && propertyPath.IndexOf ( '[' ) >= 0 )
-                propertyPath = IndexerMatcher.Value.Replace ( propertyPath, "[]" );
+            var dependencies = context.GetDependencies ( propertyPath );
+            if ( rule != null )
+                dependencies = dependencies.Concat ( rule.GetDependencies ( context ) );
 
-            var dependencies = Enumerable.Empty < string > ( );
-            if ( rule != null && rule.Validators.Any ( validator => validator is DependencyPropertyValidator ) )
+            if ( HasIndexers )
             {
-                dependencies = rule.Validators.OfType < DependencyPropertyValidator > ( )
-                                              .SelectMany ( validator  => validator.Dependencies.Select ( PropertyChain.FromExpression ) )
-                                              .Select     ( dependency => context.PropertyChain.BuildPropertyName ( dependency.ToString ( ) ) );
-
-                if ( HasIndexers )
-                    dependencies = dependencies.Select ( propertyPath => IndexerMatcher.Value.Replace ( propertyPath, "[]" ) );
+                propertyPath = IndexerMatcher.Value.Replace ( propertyPath, "[]" );
+                dependencies = dependencies.Select ( propertyPath => IndexerMatcher.Value.Replace ( propertyPath, "[]" ) );
             }
 
             // Validator selector only applies to the top level.
             // If we're running in a child context then this means that the child validator has already been selected
-            // Because of this, we assume that the rule should continue (ie if the parent rule is valid, all children are valid)
+            // Because of this, we assume that the rule should continue (i.e. if the parent rule is valid, all children are valid)
             var isChildContext = context.IsChildContext;
             var cascadeEnabled = ! context.RootContextData.ContainsKey ( DisableCascadeKey );
 
@@ -76,9 +71,9 @@ namespace FluentValidation.Reactive.Internal
                    Matches ( propertyPath ) ||
                    dependencies.Any ( Matches );
 
-            bool Matches ( string propertyPath ) => PropertyPaths.Any ( path => path == propertyPath ||
-                                                                                IsSubPath ( propertyPath, path ) ||
-                                                                                IsSubPath ( path, propertyPath ) );
+            bool Matches ( string otherPath ) => PropertyPaths.Any ( path => path == otherPath ||
+                                                                     IsSubPath ( otherPath, path ) ||
+                                                                     IsSubPath ( path, otherPath ) );
         }
 
         private static bool IsSubPath ( string path, string parentPath )

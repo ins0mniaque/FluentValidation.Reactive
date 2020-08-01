@@ -8,28 +8,29 @@ namespace FluentValidation.Reactive
 {
     public static class RuleBuilderExtensions
     {
-        public static IRuleBuilderOptions < T, TProperty > DependsOn < T, TProperty > ( this IRuleBuilderOptions < T, TProperty > ruleBuilderOptions, params Expression < Func < T, object? > > [ ] expressions )
+        public static IRuleBuilderOptions < T, TProperty > DependsOn < T, TProperty > ( this IRuleBuilderOptions < T, TProperty > rule, params Expression < Func < T, object? > > [ ] expressions )
         {
-            if ( ruleBuilderOptions == null ) throw new ArgumentNullException       ( nameof ( ruleBuilderOptions ) );
+            if ( rule               == null ) throw new ArgumentNullException       ( nameof ( rule        ) );
             if ( expressions        == null ) throw new ArgumentNullException       ( nameof ( expressions ) );
             if ( expressions.Length == 0    ) throw new ArgumentOutOfRangeException ( nameof ( expressions ) );
 
-            var validator = new DependentPropertyValidator ( expressions.Select ( Uncast ) );
+            var dependencyValidator = new DependentPropertyValidator ( expressions.Select ( Uncast ) );
 
-            ruleBuilderOptions.OnFailure ( (_, context) => context.ParentContext.AddDependencies ( context.PropertyName, validator.Dependencies ) );
-            ruleBuilderOptions.Configure ( config =>
+            rule.Configure ( config =>
             {
+                config.ReplaceValidator ( config.CurrentValidator, new PassthroughValidator < T > ( config.CurrentValidator, context =>
+                {
+                    context.ParentContext.AddDependencies ( context.PropertyName, dependencyValidator.Dependencies );
+                } ) );
+
                 var currentValidator = config.CurrentValidator;
-                if ( currentValidator != null )
-                    config.RemoveValidator ( currentValidator );
 
-                config.AddValidator ( validator );
-
-                if ( currentValidator != null )
-                    config.AddValidator ( currentValidator );
+                config.RemoveValidator ( currentValidator    );
+                config.AddValidator    ( dependencyValidator );
+                config.AddValidator    ( currentValidator    );
             } );
 
-            return ruleBuilderOptions;
+            return rule;
         }
 
         private static LambdaExpression Uncast ( LambdaExpression expression )

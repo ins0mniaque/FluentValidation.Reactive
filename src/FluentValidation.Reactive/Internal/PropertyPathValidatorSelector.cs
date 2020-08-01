@@ -54,17 +54,15 @@ namespace FluentValidation.Reactive.Internal
             if ( HasIndexers && propertyPath.IndexOf ( '[' ) >= 0 )
                 propertyPath = IndexerMatcher.Value.Replace ( propertyPath, "[]" );
 
-            var propertyPaths = PropertyPaths;
+            var dependencies = Enumerable.Empty < string > ( );
             if ( rule != null && rule.Validators.Any ( validator => validator is DependencyPropertyValidator ) )
             {
-                var dependencies = rule.Validators.OfType < DependencyPropertyValidator > ( )
-                                                  .SelectMany ( validator  => validator.Dependencies.Select ( PropertyChain.FromExpression ) )
-                                                  .Select     ( dependency => context.PropertyChain.BuildPropertyName ( dependency.ToString ( ) ) );
+                dependencies = rule.Validators.OfType < DependencyPropertyValidator > ( )
+                                              .SelectMany ( validator  => validator.Dependencies.Select ( PropertyChain.FromExpression ) )
+                                              .Select     ( dependency => context.PropertyChain.BuildPropertyName ( dependency.ToString ( ) ) );
 
                 if ( HasIndexers )
                     dependencies = dependencies.Select ( propertyPath => IndexerMatcher.Value.Replace ( propertyPath, "[]" ) );
-
-                propertyPaths = propertyPaths.Concat ( dependencies ).ToList ( );
             }
 
             // Validator selector only applies to the top level.
@@ -73,11 +71,14 @@ namespace FluentValidation.Reactive.Internal
             var isChildContext = context.IsChildContext;
             var cascadeEnabled = ! context.RootContextData.ContainsKey ( DisableCascadeKey );
 
-            return isChildContext && cascadeEnabled && ! propertyPaths.Any ( x => x.Contains ( '.' ) ) ||
+            return isChildContext && cascadeEnabled && ! PropertyPaths.Any ( x => x.Contains ( '.' ) ) ||
                    rule is IIncludeRule ||
-                   propertyPaths.Any ( path => path == propertyPath ||
-                                               IsSubPath ( propertyPath, path ) ||
-                                               IsSubPath ( path, propertyPath ) );
+                   Matches ( propertyPath ) ||
+                   dependencies.Any ( Matches );
+
+            bool Matches ( string propertyPath ) => PropertyPaths.Any ( path => path == propertyPath ||
+                                                                                IsSubPath ( propertyPath, path ) ||
+                                                                                IsSubPath ( path, propertyPath ) );
         }
 
         private static bool IsSubPath ( string path, string parentPath )

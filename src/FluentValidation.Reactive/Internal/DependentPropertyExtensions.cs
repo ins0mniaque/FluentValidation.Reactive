@@ -3,11 +3,10 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using FluentValidation.Internal;
-using FluentValidation.Reactive.Validators;
 
 namespace FluentValidation.Reactive.Internal
 {
-    internal static class DependencyPropertyExtensions
+    internal static class DependentPropertyExtensions
     {
         private const string DependenciesKey = "_FVR_Dependencies";
 
@@ -36,7 +35,7 @@ namespace FluentValidation.Reactive.Internal
 
         public static IEnumerable < string > GetDependencies ( this IValidationRule rule, IValidationContext context )
         {
-            return rule.Validators.OfType < DependencyPropertyValidator > ( )
+            return rule.Validators.OfType < DependentPropertyValidator > ( )
                        .SelectMany ( validator  => validator.Dependencies.Select ( PropertyChain.FromExpression ) )
                        .Select     ( dependency => context.PropertyChain.BuildPropertyName ( dependency.ToString ( ) ) );
         }

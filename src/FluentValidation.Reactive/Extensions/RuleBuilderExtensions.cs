@@ -3,7 +3,6 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using FluentValidation.Reactive.Internal;
-using FluentValidation.Reactive.Validators;
 
 namespace FluentValidation.Reactive
 {
@@ -15,7 +14,7 @@ namespace FluentValidation.Reactive
             if ( expressions        == null ) throw new ArgumentNullException       ( nameof ( expressions ) );
             if ( expressions.Length == 0    ) throw new ArgumentOutOfRangeException ( nameof ( expressions ) );
 
-            var validator = new DependencyPropertyValidator ( expressions.Select ( Uncast ) );
+            var validator = new DependentPropertyValidator ( expressions.Select ( Uncast ) );
 
             ruleBuilderOptions.OnFailure ( (_, context) => context.ParentContext.AddDependencies ( context.PropertyName, validator.Dependencies ) );
             ruleBuilderOptions.Configure ( config =>

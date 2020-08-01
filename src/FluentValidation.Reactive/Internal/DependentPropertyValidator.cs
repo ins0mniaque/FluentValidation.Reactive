@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 using FluentValidation.Results;
 using FluentValidation.Validators;
 
-namespace FluentValidation.Reactive.Validators
+namespace FluentValidation.Reactive.Internal
 {
-    public class DependencyPropertyValidator : IPropertyValidator
+    public class DependentPropertyValidator : IPropertyValidator
     {
-        public DependencyPropertyValidator ( IEnumerable < LambdaExpression > dependencies )
+        public DependentPropertyValidator ( IEnumerable < LambdaExpression > dependencies )
         {
             Dependencies = new ReadOnlyCollection < LambdaExpression > ( dependencies.ToList ( ) );
             Options      = new PropertyValidatorOptions ( );

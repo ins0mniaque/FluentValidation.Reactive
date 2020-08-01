@@ -75,7 +75,9 @@ namespace FluentValidation.Reactive
 
                 var childValidators = rule.Validators
                                           .OfType < IChildValidatorAdaptor > ( )
-                                          .Select ( adaptor => GetValidator ( adaptor, emptyContext ) );
+                                          .Select ( adaptor   => GetValidator ( adaptor, emptyContext ) )
+                                          .Where  ( validator => validator != null )
+                                          .Select ( validator => validator! );
 
                 foreach ( var childValidator in childValidators )
                     foreach ( var childExpression in childValidator.GetValidatedExpressions ( expression ) )
@@ -85,7 +87,7 @@ namespace FluentValidation.Reactive
 
         private static readonly Lazy < Dictionary < Type, MethodInfo > > typedChildValidatorAdaptorCache = new Lazy < Dictionary < Type, MethodInfo > > ( );
 
-        private static IValidator GetValidator ( IChildValidatorAdaptor adaptor, PropertyValidatorContext context )
+        private static IValidator? GetValidator ( IChildValidatorAdaptor adaptor, PropertyValidatorContext context )
         {
             var cache       = typedChildValidatorAdaptorCache.Value;
             var adaptorType = adaptor.GetType ( );
@@ -93,7 +95,7 @@ namespace FluentValidation.Reactive
                 cache [ adaptorType ] = getValidator = adaptorType.GetRuntimeMethod ( nameof ( ChildValidatorAdaptor < object, object >.GetValidator ),
                                                                                       new [ ] { typeof ( PropertyValidatorContext ) } );
 
-            return (IValidator) getValidator.Invoke ( adaptor, new [ ] { context } );
+            return (IValidator?) getValidator?.Invoke ( adaptor, new [ ] { context } );
         }
 
         private static bool IsCollectionPropertyRuleType ( Type type )

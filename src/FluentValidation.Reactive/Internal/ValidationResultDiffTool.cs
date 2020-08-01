@@ -34,7 +34,7 @@ namespace FluentValidation.Reactive.Internal
         {
             public string [ ]? RuleSets { get; set; }
 
-            public IEnumerable < IPropertyValidator > Validators => throw new NotImplementedException ( );
+            public IEnumerable < IPropertyValidator > Validators => Enumerable.Empty < IPropertyValidator > ( );
 
             public void ApplyCondition      ( Func < PropertyValidatorContext, bool >                             predicate, ApplyConditionTo applyConditionTo = ApplyConditionTo.AllValidators ) => throw new NotImplementedException ( );
             public void ApplyAsyncCondition ( Func < PropertyValidatorContext, CancellationToken, Task < bool > > predicate, ApplyConditionTo applyConditionTo = ApplyConditionTo.AllValidators ) => throw new NotImplementedException ( );

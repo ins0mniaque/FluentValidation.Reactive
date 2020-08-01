@@ -7,6 +7,7 @@ using System.Reflection;
 
 using FluentValidation.Internal;
 using FluentValidation.Validators;
+using FluentValidation.Reactive.Validators;
 
 namespace FluentValidation.Reactive
 {
@@ -61,6 +62,16 @@ namespace FluentValidation.Reactive
 
                 if ( expression != null )
                     yield return expression;
+
+                var dependencies = rule.Validators
+                                       .OfType < DependencyPropertyValidator > ( )
+                                       .SelectMany ( validator => validator.Dependencies );
+
+                if ( parent != null )
+                    dependencies = dependencies.Select ( expression => Compose ( parent, expression ) );
+
+                foreach ( var dependency in dependencies )
+                    yield return dependency;
 
                 var childValidators = rule.Validators
                                           .OfType < IChildValidatorAdaptor > ( )

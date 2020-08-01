@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 
 using FluentValidation.Internal;
+using FluentValidation.Reactive.Validators;
 
 namespace FluentValidation.Reactive.Internal
 {
@@ -53,15 +54,28 @@ namespace FluentValidation.Reactive.Internal
             if ( HasIndexers && propertyPath.IndexOf ( '[' ) >= 0 )
                 propertyPath = IndexerMatcher.Value.Replace ( propertyPath, "[]" );
 
+            var propertyPaths = PropertyPaths;
+            if ( rule != null && rule.Validators.Any ( validator => validator is DependencyPropertyValidator ) )
+            {
+                var dependencies = rule.Validators.OfType < DependencyPropertyValidator > ( )
+                                                  .SelectMany ( validator  => validator.Dependencies.Select ( PropertyChain.FromExpression ) )
+                                                  .Select     ( dependency => context.PropertyChain.BuildPropertyName ( dependency.ToString ( ) ) );
+
+                if ( HasIndexers )
+                    dependencies = dependencies.Select ( propertyPath => IndexerMatcher.Value.Replace ( propertyPath, "[]" ) );
+
+                propertyPaths = propertyPaths.Concat ( dependencies ).ToList ( );
+            }
+
             // Validator selector only applies to the top level.
             // If we're running in a child context then this means that the child validator has already been selected
             // Because of this, we assume that the rule should continue (ie if the parent rule is valid, all children are valid)
             var isChildContext = context.IsChildContext;
             var cascadeEnabled = ! context.RootContextData.ContainsKey ( DisableCascadeKey );
 
-            return isChildContext && cascadeEnabled && ! PropertyPaths.Any ( x => x.Contains ( '.' ) ) ||
+            return isChildContext && cascadeEnabled && ! propertyPaths.Any ( x => x.Contains ( '.' ) ) ||
                    rule is IIncludeRule ||
-                   PropertyPaths.Any ( path => path == propertyPath ||
+                   propertyPaths.Any ( path => path == propertyPath ||
                                                IsSubPath ( propertyPath, path ) ||
                                                IsSubPath ( path, propertyPath ) );
         }

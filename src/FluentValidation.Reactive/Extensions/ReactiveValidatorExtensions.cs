@@ -16,7 +16,7 @@ namespace FluentValidation.Reactive
         /// <param name="instance">The object to validate</param>
         /// <param name="cancellationToken"></param>
         /// <param name="properties">Expressions to specify the properties to validate</param>
-        public static void Validate < T > ( this IReactiveValidator < T > validator, T instance, CancellationToken cancellationToken = default, params Expression < Func < T, object > > [ ] properties ) where T : class
+        public static void Validate < T > ( this IReactiveValidator < T > validator, T instance, CancellationToken cancellationToken = default, params Expression < Func < T, object? > > [ ] properties ) where T : class
         {
             var selector = ValidatorOptions.Global.ValidatorSelectors.MemberNameValidatorSelectorFactory ( MemberNameValidatorSelector.MemberNamesFromExpressions ( properties ) );
             var context  = new ValidationContext < T > ( instance, new PropertyChain ( ), selector );

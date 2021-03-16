@@ -15,25 +15,25 @@ namespace FluentValidation.Reactive
             return validationResult.Select ( validation => validation.IsValid ).DistinctUntilChanged ( );
         }
 
-        public static IObservable < ValidationResult > For < T > ( this IObservable < ValidationResult > validationResult, Expression < Func < T, object > > property )
+        public static IObservable < ValidationResult > For < T > ( this IObservable < ValidationResult > validationResult, Expression < Func < T, object? > > property )
         {
             return validationResult.Select ( validation => validation.For ( property ) )
                                    .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
         }
 
-        public static IObservable < ValidationResult > For < T > ( this IObservable < ValidationResult > validationResult, params Expression < Func < T, object > > [ ] properties )
+        public static IObservable < ValidationResult > For < T > ( this IObservable < ValidationResult > validationResult, params Expression < Func < T, object? > > [ ] properties )
         {
             return validationResult.Select ( validation => validation.For ( properties ) )
                                    .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
         }
 
-        public static IObservable < ValidationResult > StrictlyFor < T > ( this IObservable < ValidationResult > validationResult, Expression < Func < T, object > > property )
+        public static IObservable < ValidationResult > StrictlyFor < T > ( this IObservable < ValidationResult > validationResult, Expression < Func < T, object? > > property )
         {
             return validationResult.Select ( validation => validation.StrictlyFor ( property ) )
                                    .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
         }
 
-        public static IObservable < ValidationResult > StrictlyFor < T > ( this IObservable < ValidationResult > validationResult, params Expression < Func < T, object > > [ ] properties )
+        public static IObservable < ValidationResult > StrictlyFor < T > ( this IObservable < ValidationResult > validationResult, params Expression < Func < T, object? > > [ ] properties )
         {
             return validationResult.Select ( validation => validation.StrictlyFor ( properties ) )
                                    .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
@@ -63,22 +63,22 @@ namespace FluentValidation.Reactive
                                    .DistinctUntilChanged ( Internal.ValidationResultEqualityComparer.Instance );
         }
 
-        public static ValidationResult For < T > ( this ValidationResult validationResult, Expression < Func < T, object > > property )
+        public static ValidationResult For < T > ( this ValidationResult validationResult, Expression < Func < T, object? > > property )
         {
             return validationResult.For ( PropertyChain.FromExpression ( property ).ToString ( ), true );
         }
 
-        public static ValidationResult For < T > ( this ValidationResult validationResult, params Expression < Func < T, object > > [ ] properties )
+        public static ValidationResult For < T > ( this ValidationResult validationResult, params Expression < Func < T, object? > > [ ] properties )
         {
             return validationResult.For ( properties.Select ( property => PropertyChain.FromExpression ( property ).ToString ( ) ).ToArray ( ), true );
         }
 
-        public static ValidationResult StrictlyFor < T > ( this ValidationResult validationResult, Expression < Func < T, object > > property )
+        public static ValidationResult StrictlyFor < T > ( this ValidationResult validationResult, Expression < Func < T, object? > > property )
         {
             return validationResult.For ( PropertyChain.FromExpression ( property ).ToString ( ), false );
         }
 
-        public static ValidationResult StrictlyFor < T > ( this ValidationResult validationResult, params Expression < Func < T, object > > [ ] properties )
+        public static ValidationResult StrictlyFor < T > ( this ValidationResult validationResult, params Expression < Func < T, object? > > [ ] properties )
         {
             return validationResult.For ( properties.Select ( property => PropertyChain.FromExpression ( property ).ToString ( ) ).ToArray ( ), false );
         }

@@ -13,7 +13,7 @@ namespace FluentValidation.Reactive
 {
     public static class ValidatorExtensions
     {
-        private static readonly PropertyValidatorContext emptyContext = new PropertyValidatorContext ( null, null, null );
+        private static readonly PropertyValidatorContext emptyContext = new PropertyValidatorContext ( new ValidationContext < object? > ( null ), null, null );
 
         public static IEnumerable < string > GetValidatedPropertyPaths ( this IValidator validator )
         {

@@ -54,6 +54,13 @@ namespace FluentValidation.Reactive
             return Internal.ValidationResultDiffTool.Merge ( previousContext, previousResult, currentContext, currentResult );
         }
 
+        protected virtual bool HandleException ( IValidationContext context, Exception exception, out ValidationResult? validationResult )
+        {
+            validationResult = null;
+
+            return false;
+        }
+
         private IObservable < ContextualValidationResult > ValidateAsync ( ValidationRequest request )
         {
             if ( request.Context == null )
@@ -64,9 +71,19 @@ namespace FluentValidation.Reactive
 
             async Task < ValidationResult > ValidateAsync ( CancellationToken cancellationToken )
             {
-                using ( var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource ( request.CancellationToken, cancellationToken ) )
-                    return await Validator.ValidateAsync  ( request.Context, linkedCancellation.Token )
-                                          .ConfigureAwait ( false );
+                try
+                {
+                    using ( var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource ( request.CancellationToken, cancellationToken ) )
+                        return await Validator.ValidateAsync  ( request.Context, linkedCancellation.Token )
+                                              .ConfigureAwait ( false );
+                }
+                catch ( Exception exception )
+                {
+                    if ( HandleException ( request.Context, exception, out var validationResult ) )
+                        return validationResult ?? new ValidationResult ( );
+
+                    throw;
+                }
             }
         }
 
